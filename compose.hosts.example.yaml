@@ -1,0 +1,5 @@
+services:
+  control-panel:
+    user: root
+    volumes:
+      - /etc/hosts:/etc/hosts:rw

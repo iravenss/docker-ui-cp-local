@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>локальная панель Docker</title>
+  <style>
+    :root {
+      --bg: #0f1219;
+      --card: #1a1f2b;
+      --text: #e8eaee;
+      --muted: #9aa3b5;
+      --accent: #5b9bd5;
+      --danger: #c75c5c;
+      --ok: #6db58a;
+      --border: #2d3548;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1.5rem;
+      line-height: 1.45;
+      max-width: 960px;
+      margin-inline: auto;
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 650;
+      margin: 0 0 1rem;
+    }
+
+    h2 {
+      font-size: 1.05rem;
+      margin: 1.75rem 0 0.6rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    h2:first-child {
+      margin-top: 0;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .flash-notice {
+      border-left: 3px solid var(--ok);
+      padding-left: 0.75rem;
+      margin-bottom: 1rem;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+    }
+
+    .flash-error {
+      border-left: 3px solid var(--danger);
+      padding-left: 0.75rem;
+      margin-bottom: 1rem;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      max-width: 28rem;
+      padding: 0.45rem 0.55rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #12161f;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    textarea {
+      min-height: 3.2rem;
+      resize: vertical;
+    }
+
+    button,
+    .btn {
+      cursor: pointer;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #242b3a;
+      color: var(--text);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.88rem;
+    }
+
+    button.primary {
+      background: #2a4a6f;
+      border-color: #3d6a9a;
+    }
+
+    button.danger {
+      background: #4a2a2a;
+      border-color: #6a3d3d;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+    }
+
+    form.inline {
+      display: inline;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.45rem 0.35rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      background: #242b3a;
+    }
+
+    .tag.up {
+      color: var(--ok);
+    }
+
+    .tag.down {
+      color: var(--muted);
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      word-break: break-all;
+    }
+
+    .stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    fieldset {
+      border: none;
+      padding: 0;
+      margin: 0.5rem 0 0;
+    }
+
+    fieldset label {
+      display: inline;
+      margin-right: 1rem;
+      color: var(--text);
+    }
+
+    a.path-link {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a.path-link:hover {
+      text-decoration: underline;
+    }
+
+    .proj-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      margin: 0 0 0.15rem;
+    }
+
+    .proj-domain {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin: 0 0 0.35rem;
+    }
+
+    .proj-desc {
+      margin: 0.35rem 0 0;
+      font-size: 0.8rem;
+      color: var(--text);
+      white-space: pre-wrap;
+      max-width: 22rem;
+    }
+
+    .action-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+      min-width: 11rem;
+    }
+
+    .action-box fieldset.solo-fs {
+      margin-top: 0;
+      margin-bottom: 0.25rem;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .form-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin: 0 0 0.6rem;
+      max-width: 32rem;
+    }
+
+    dialog.edit-dialog {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--text);
+      padding: 1rem 1.25rem;
+      max-width: min(34rem, 96vw);
+    }
+
+    dialog.edit-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.55);
+    }
+
+    .edit-dialog h3 {
+      margin: 0 0 0.75rem;
+      font-size: 1.02rem;
+      font-weight: 600;
+    }
+
+    .dialog-actions {
+      margin-top: 0.85rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    dialog.compose-log-dlg {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--text);
+      padding: 1rem 1.25rem;
+      max-width: min(52rem, 96vw);
+      width: 100%;
+    }
+
+    dialog.compose-log-dlg::backdrop {
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    dialog.compose-log-dlg h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.05rem;
+    }
+
+    #compose-stream-log {
+      margin: 0;
+      padding: 0.65rem 0.75rem;
+      max-height: min(52vh, 28rem);
+      overflow: auto;
+      background: #12161f;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    #compose-stream-log .log-phase {
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 0.35rem;
+    }
+
+    #compose-stream-log .log-phase:first-child {
+      margin-top: 0;
+    }
+
+    #compose-stream-log .log-err {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    #compose-stream-status {
+      margin-top: 0.65rem;
+      font-size: 0.88rem;
+    }
+
+    #compose-stream-status.ok {
+      color: var(--ok);
+    }
+
+    #compose-stream-status.bad {
+      color: var(--danger);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Локальная панель переключения Docker-проектов</h1>
+  <p class="meta">Корень проектов: <span class="mono">{{ projects_root }}</span> · hosts:
+    <span class="mono">{{ hosts_path }}</span>
+  </p>
+
+  <div class="card">
+    <h2>Проекты</h2>
+    <form method="post" action="/stop-all-applications" style="margin-bottom:0.75rem" onsubmit="return confirm('Остановить все приложения (compose down)?');">
+      <button class="danger" type="submit">Остановить все приложения</button>
+    </form>
+
+    {% if projects %}
+    <table style="margin-top:0.75rem">
+      <thead>
+        <tr>
+          <th>Проект</th>
+          <th>Каталог</th>
+          <th>Статус</th>
+          <th style="width:12rem">Управление</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in projects %}
+        {% set p = row.p %}
+        <tr>
+          <td>
+            <div class="proj-title">{{ p.display_name or p.domain }}</div>
+            <div class="mono" style="margin-top:0.25rem;line-height:1.35">
+              <a href="{{ row.browser_href }}" class="path-link" target="_blank" rel="noopener noreferrer">{{ row.browser_label }}</a>
+            </div>
+            <p class="meta" style="margin:0.35rem 0 0">Для <span class="mono">hosts</span>: <span class="mono">{{ p.domain }}</span>
+              {% if p.add_to_hosts %} · <span class="tag">в hosts</span>{% endif %}
+            </p>
+            {% if p.description %}<p class="proj-desc">{{ p.description }}</p>{% endif %}
+            <button type="button" class="btn" style="margin-top:0.5rem" onclick="document.getElementById('edit-dlg-{{ p.id }}').showModal()">
+              Редактировать…
+            </button>
+          </td>
+          <td>
+            {% if row.folder_uri %}
+            <a href="{{ row.folder_uri }}" class="path-link mono" title="Открыть каталог">{{ p.host_path }}</a>
+            {% else %}
+            <span class="mono">{{ p.host_path }}</span>
+            {% endif %}
+            <div class="mono" style="color:var(--muted);margin-top:0.25rem">{{ row.compose_file or '—' }}</div>
+          </td>
+          <td>
+            {% if row.compose_error %}
+            <span class="tag">{{ row.compose_error }}</span>
+            {% elif row.running %}
+            <span class="tag up">запущен</span>
+            {% else %}
+            <span class="tag down">остановлен</span>
+            {% endif %}
+            {% if row.last_started %}<br /><span class="tag" style="margin-top:0.35rem;display:inline-block">последний старт</span>{% endif %}
+          </td>
+          <td>
+            <div class="action-box">
+              {% if not row.compose_error %}
+              <form method="post" class="compose-actions-form" data-project-id="{{ p.id }}">
+                <fieldset class="solo-fs">
+                  <label><input type="radio" name="solo" value="1" {% if solo_default %}checked{% endif %} /> solo</label>
+                  <label><input type="radio" name="solo" value="0" {% if not solo_default %}checked{% endif %} /> без solo</label>
+                </fieldset>
+                <div class="btn-row">
+                  <button type="button" class="primary" data-compose-action="start">Запустить</button>
+                  <button type="button" data-compose-action="stop">Стоп</button>
+                </div>
+              </form>
+              {% endif %}
+              <form method="post" action="/projects/{{ p.id }}/delete" onsubmit="return confirm('Удалить запись проекта из панели?');">
+                <button class="danger" type="submit">Из реестра</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="meta">Проектов нет.</p>
+    {% endif %}
+
+    {% if projects %}
+    {% for row in projects %}
+    {% set p = row.p %}
+    <dialog id="edit-dlg-{{ p.id }}" class="edit-dialog">
+      <h3>Редактировать проект</h3>
+      <form method="post" action="/projects/{{ p.id }}/update">
+        <label for="en-{{ p.id }}">Название</label>
+        <input id="en-{{ p.id }}" type="text" name="display_name" value="{{ (p.display_name or '')|e }}" placeholder="видно только в панели" />
+
+        <label for="ed-{{ p.id }}" style="margin-top:0.5rem">Краткое описание</label>
+        <textarea id="ed-{{ p.id }}" name="description" rows="2" placeholder="заметка">{{ (p.description or '')|e }}</textarea>
+
+        <label for="eu-{{ p.id }}" style="margin-top:0.5rem">Ссылка на сайт (<span class="mono">http</span> / <span class="mono">https</span>, порт при необходимости)</label>
+        <input id="eu-{{ p.id }}" type="text" name="public_url" value="{{ (p.public_url or '')|e }}"
+          placeholder="https://{{ p.domain }}:8443/" />
+
+        <label for="eh-{{ p.id }}" style="margin-top:0.5rem">Имя хоста для hosts</label>
+        <input id="eh-{{ p.id }}" type="text" name="domain" value="{{ p.domain|e }}" required />
+
+        <label for="ep-{{ p.id }}" style="margin-top:0.5rem">Каталог проекта</label>
+        <input id="ep-{{ p.id }}" type="text" name="host_path" value="{{ p.host_path|e }}" required />
+
+        <label for="ec-{{ p.id }}" style="margin-top:0.5rem">Compose-файл</label>
+        <input id="ec-{{ p.id }}" type="text" name="compose_file" value="{{ (p.compose_file or '')|e }}" placeholder="оставьте пустым для автопоиска" />
+
+        <label style="margin-top:0.5rem;display:block;">
+          <input type="checkbox" name="add_to_hosts" {% if p.add_to_hosts %}checked{% endif %} />
+          Добавлять хост в <span class="mono">/etc/hosts</span>
+        </label>
+
+        <div class="dialog-actions">
+          <button type="submit" class="primary">Сохранить</button>
+          <button type="button" onclick="document.getElementById('edit-dlg-{{ p.id }}').close()">Отмена</button>
+        </div>
+      </form>
+    </dialog>
+    {% endfor %}
+    {% endif %}
+  </div>
+
+  {% if docker_suggestions or discover_hint %}
+  <div class="card">
+    <h2>Запущенные compose, которых ещё нет в реестре</h2>
+    <p class="meta">Данные с хоста: <span class="mono">docker&nbsp;compose&nbsp;ls</span> или метки запущенных контейнеров.
+      Каталог — родитель compose-файла. Стек панели <span class="mono">local-dev-panel</span> не показывается.</p>
+    {% if discover_hint %}
+    <p class="flash-notice">{{ discover_hint }}</p>
+    {% endif %}
+    {% if docker_suggestions %}
+    <table style="margin-top:0.5rem">
+      <thead>
+        <tr>
+          <th>Compose-проект</th>
+          <th>Каталог</th>
+          <th>Compose-файл</th>
+          <th>Добавить в панель</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in docker_suggestions %}
+        <tr>
+          <td class="mono">{{ s.compose_project }}<br /><span class="tag up">{{ s.status }}</span></td>
+          <td>
+            {% if s.folder_uri %}
+            <a href="{{ s.folder_uri }}" class="path-link mono" title="Открыть через file:// (зависит от браузера)">{{ s.working_dir }}</a>
+            {% else %}
+            <span class="mono">{{ s.working_dir }}</span>
+            {% endif %}
+          </td>
+          <td class="mono">{{ s.compose_file }}</td>
+          <td>
+            {% if s.root_ok %}
+            <form method="post" action="/projects/add" style="margin:0">
+              <input type="hidden" name="host_path" value="{{ s.working_dir }}" />
+              <input type="hidden" name="compose_file" value="{{ s.compose_file }}" />
+              <label for="sdn{{ loop.index }}">Имя хоста для hosts</label>
+              <input id="sdn{{ loop.index }}" type="text" name="domain" value="{{ s.suggested_domain }}" required />
+              <label for="surl{{ loop.index }}" style="margin-top:0.35rem">Ссылка в браузер</label>
+              <input id="surl{{ loop.index }}" type="text" name="public_url" value="http://{{ s.suggested_domain }}/" placeholder="https://… :порт…" />
+              <label for="snn{{ loop.index }}" style="margin-top:0.35rem">Название проекта</label>
+              <input id="snn{{ loop.index }}" type="text" name="display_name" value="{{ s.compose_project }}" placeholder="как показывать в списке" />
+              <label for="sde{{ loop.index }}" style="margin-top:0.35rem">Краткое описание</label>
+              <textarea id="sde{{ loop.index }}" name="description" rows="2" placeholder="необязательно, только для этой панели"></textarea>
+              <label style="margin-top:0.35rem;display:block;">
+                <input type="checkbox" name="add_to_hosts" checked />
+                в hosts
+              </label>
+              <button type="submit" class="primary" style="margin-top:0.5rem">Добавить в проекты</button>
+            </form>
+            {% else %}
+            <span class="tag down">{{ s.skip_reason or 'нельзя добавить' }}</span>
+            <p class="meta" style="margin:0.35rem 0 0;">Проверьте <span class="mono">PROJECTS_HOST_ROOT</span> и volume в compose панели.</p>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+    {% if not docker_suggestions and discover_hint %}
+    <p class="meta">Подходящих запущенных стеков для быстрого добавления не нашлось.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if notice %}
+  <div class="flash-notice">{{ notice }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="flash-error">{{ error }}</div>
+  {% if docker_suggestions %}
+  <p class="meta" style="margin-top:-0.5rem;margin-bottom:1rem">Запущенный стек можно добавить в блоке <strong>«Запущенные compose…»</strong> (сразу под списком проектов).</p>
+  {% endif %}
+  {% endif %}
+
+  <div class="card">
+    <h2>Локальные домены (только записи в hosts)</h2>
+    <p class="meta">Строки в маркере <span class="mono"># &lt;&lt;&lt; local-dev-panel begin/end &gt;&gt;&gt;</span> в {{ hosts_path }}.</p>
+    <form method="post" action="/extra-domains/add" style="margin-bottom:0.75rem">
+      <label for="dom">Домен</label>
+      <input id="dom" name="domain" type="text" placeholder="mycp.loc" required />
+      <button class="primary" type="submit" style="margin-top:0.5rem">Добавить в hosts</button>
+    </form>
+    {% if extra_domains %}
+    <ul style="margin:0;padding-left:1.1rem">
+      {% for d in extra_domains %}
+      <li style="margin:0.25rem 0">
+        <span class="mono">{{ d }}</span>
+        <form class="inline" method="post" action="/extra-domains/remove">
+          <input type="hidden" name="domain" value="{{ d }}" />
+          <button type="submit" class="danger">Удалить</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="meta">Пока пусто. Добавьте хотя бы <span class="mono">mycp.loc</span>.</p>
+    {% endif %}
+
+    <h2 style="margin-top:1.25rem">Синхронизация блока hosts</h2>
+    <p class="meta">Целевой набор: домены проектов с «в hosts» + список выше.<br />Сейчас в файле: {% if hosts_file_hostnames %}{{
+      hosts_file_hostnames | join(', ') }}{% else %}— не прочитан или блок пуст{% endif %}
+    </p>
+    <form method="post" action="/hosts/apply">
+      <button class="primary" type="submit">Перезаписать блок в {{ hosts_path }}</button>
+    </form>
+    <p class="mono" style="margin-top:0.5rem;color:var(--muted)">desired: {% for h in desired_hostnames %}<span class="tag">{{ h }}</span>{% endfor %}</p>
+  </div>
+
+  <div class="card">
+    <h2>Добавить проект</h2>
+    <p class="form-hint">Название и описание видны только в этой панели. По клику на путь система попытается открыть папку через <span class="mono">file://</span>
+      (во многих окружениях Linux срабатывает; в Chrome возможны ограничения).</p>
+    <form method="post" action="/projects/add">
+      <label for="pfn">Название проекта</label>
+      <input id="pfn" type="text" name="display_name" placeholder="например Bitrix-тест или Laravel API" />
+
+      <label for="pfdesc" style="margin-top:0.5rem">Краткое описание</label>
+      <textarea id="pfdesc" name="description" rows="2" placeholder="заметка для себя: стек, ветка, заказчик…"></textarea>
+
+      <label for="pd" style="margin-top:0.5rem">Имя хоста для hosts</label>
+      <input id="pd" name="domain" type="text" placeholder="test.loc" required />
+
+      <label for="purl" style="margin-top:0.5rem">Ссылка в браузер</label>
+      <input id="purl" type="text" name="public_url" placeholder="https://test.loc:8443/app — если пусто, будет http://имя-хоста/" />
+
+      <label for="path" style="margin-top:0.5rem">Абсолютный каталог проекта</label>
+      <input id="path" name="host_path" type="text" placeholder="/home/you/dev/bitrix" required />
+
+      <label for="cf" style="margin-top:0.5rem">Compose-файл (оставьте пустым для авто)</label>
+      <input id="cf" name="compose_file" type="text" placeholder="docker-compose.yml" />
+
+      <label style="margin-top:0.6rem">
+        <input type="checkbox" name="add_to_hosts" checked />
+        Добавить домен в hosts
+      </label>
+
+      <div><button class="primary" type="submit" style="margin-top:0.6rem">Сохранить проект</button></div>
+    </form>
+  </div>
+
+  <dialog id="compose-stream-dlg" class="compose-log-dlg">
+    <h3 id="compose-stream-title">Docker Compose</h3>
+    <pre id="compose-stream-log" aria-live="polite"></pre>
+    <div id="compose-stream-status"></div>
+    <div class="dialog-actions" style="margin-top:0.75rem">
+      <button type="button" id="compose-stream-close">Закрыть</button>
+    </div>
+  </dialog>
+
+  <script>
+    (function () {
+      const dlg = document.getElementById('compose-stream-dlg');
+      const titleEl = document.getElementById('compose-stream-title');
+      const logEl = document.getElementById('compose-stream-log');
+      const statusEl = document.getElementById('compose-stream-status');
+      const closeBtn = document.getElementById('compose-stream-close');
+      let autoCloseTimer = null;
+
+      function clearTimers() {
+        if (autoCloseTimer) {
+          clearTimeout(autoCloseTimer);
+          autoCloseTimer = null;
+        }
+      }
+
+      function openDlg(title) {
+        clearTimers();
+        titleEl.textContent = title;
+        logEl.textContent = '';
+        statusEl.textContent = 'Выполняется…';
+        statusEl.className = '';
+        closeBtn.disabled = true;
+        dlg.showModal();
+      }
+
+      function appendPhase(text) {
+        const span = document.createElement('div');
+        span.className = 'log-phase';
+        span.textContent = '» ' + text;
+        logEl.appendChild(span);
+      }
+
+      function appendLine(text) {
+        logEl.appendChild(document.createTextNode(text + '\n'));
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function appendErr(text) {
+        const span = document.createElement('div');
+        span.className = 'log-err';
+        span.textContent = text;
+        logEl.appendChild(span);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      async function readSseStream(response, onObj) {
+        const reader = response.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+        function flushBlocks() {
+          let sep;
+          while ((sep = buf.indexOf('\n\n')) >= 0) {
+            const block = buf.slice(0, sep);
+            buf = buf.slice(sep + 2);
+            for (const line of block.split('\n')) {
+              if (line.startsWith('data:')) {
+                const raw = line.slice(5).replace(/^\s+/, '');
+                if (!raw) continue;
+                try {
+                  onObj(JSON.parse(raw));
+                } catch (e) {
+                  appendErr('Не удалось разобрать ответ сервера: ' + raw);
+                }
+              }
+            }
+          }
+        }
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          flushBlocks();
+        }
+        buf += dec.decode();
+        flushBlocks();
+      }
+
+      closeBtn.addEventListener('click', function () {
+        clearTimers();
+        dlg.close();
+      });
+
+      document.body.addEventListener('click', async function (ev) {
+        const btn = ev.target.closest('[data-compose-action]');
+        if (!btn) return;
+        const form = btn.closest('.compose-actions-form');
+        if (!form) return;
+        const projectId = form.getAttribute('data-project-id');
+        const action = btn.getAttribute('data-compose-action');
+        if (!projectId || !action) return;
+
+        const isStart = action === 'start';
+        openDlg(isStart ? 'Запуск compose' : 'Остановка compose');
+
+        const fd = new FormData();
+        if (isStart) {
+          const solo = form.querySelector('input[name="solo"]:checked');
+          fd.append('solo', solo ? solo.value : '1');
+        }
+
+        const url = isStart
+          ? '/projects/' + encodeURIComponent(projectId) + '/stream/start'
+          : '/projects/' + encodeURIComponent(projectId) + '/stream/stop';
+
+        try {
+          const res = await fetch(url, { method: 'POST', body: fd, headers: { 'Accept': 'text/event-stream' } });
+          if (!res.ok) {
+            appendErr('HTTP ' + res.status + ' ' + res.statusText);
+            const t = await res.text();
+            if (t) appendLine(t);
+            statusEl.textContent = 'Ошибка запроса.';
+            statusEl.className = 'bad';
+            closeBtn.disabled = false;
+            return;
+          }
+
+          let sawDone = false;
+          await readSseStream(res, function (obj) {
+            if (!obj || typeof obj !== 'object') return;
+            if (obj.t === 'phase' && obj.title) appendPhase(obj.title);
+            else if (obj.t === 'line' && typeof obj.text === 'string') appendLine(obj.text);
+            else if (obj.t === 'error' && obj.message) appendErr(obj.message);
+            else if (obj.t === 'exit') appendLine('[код выхода ' + obj.code + ']');
+            else if (obj.t === 'done') {
+              sawDone = true;
+              if (obj.ok) {
+                statusEl.textContent = 'Готово. Страница обновится…';
+                statusEl.className = 'ok';
+                autoCloseTimer = setTimeout(function () {
+                  dlg.close();
+                  window.location.reload();
+                }, 1400);
+              } else {
+                statusEl.textContent = 'Завершено с ошибкой (см. вывод выше).';
+                statusEl.className = 'bad';
+              }
+            }
+          });
+
+          if (!sawDone) {
+            statusEl.textContent = 'Поток оборвался без финального статуса.';
+            statusEl.className = 'bad';
+          }
+        } catch (e) {
+          appendErr(String(e && e.message ? e.message : e));
+          statusEl.textContent = 'Сбой сети или браузера.';
+          statusEl.className = 'bad';
+        }
+        closeBtn.disabled = false;
+      });
+    })();
+  </script>
+</body>
+
+</html>

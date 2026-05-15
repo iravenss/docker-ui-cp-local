@@ -1,0 +1,13 @@
+services:
+  control-panel:
+    build: .
+    ports:
+      - "7580:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data
+      - "${PROJECTS_HOST_ROOT}:${PROJECTS_HOST_ROOT}:rw"
+    environment:
+      PROJECTS_HOST_ROOT: ${PROJECTS_HOST_ROOT:?set in .env from .env.example}
+      HOSTS_PATH: ${HOSTS_PATH:-/etc/hosts}
+      SOLO_MODE_DEFAULT: ${SOLO_MODE_DEFAULT:-true}
