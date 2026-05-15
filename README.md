@@ -126,11 +126,11 @@ git init
 git add .
 git commit -m "Initial import: local Docker Compose control panel"
 git branch -M main
-git remote add origin https://github.com/iravenss/docker-ui-cp-local.git
+git remote add origin git@github.com:iravenss/docker-ui-cp-local.git
 git push -u origin main
 ```
 
-Если репозиторий уже создан на GitHub пустым, первого пуша достаточно. Для аутентификации используйте **Personal Access Token** (HTTPS) или SSH-ключ (`git@github.com:iravenss/docker-ui-cp-local.git`).
+Если репозиторий уже создан на GitHub пустым, первого пуша достаточно. Удобнее **SSH** (ключ на машине); иначе HTTPS с **Personal Access Token**.
 
 ---
 
