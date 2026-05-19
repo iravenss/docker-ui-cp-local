@@ -54,7 +54,38 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
+В `compose.yaml` задано **`restart: unless-stopped`**: после перезагрузки панель поднимется сама, **если** на машине автоматически стартует **Docker** (см. ниже).
+
 Дальше откройте **`http://127.0.0.1:7580`**.
+
+### Панель не открывается?
+
+Чаще всего контейнер **просто остановлен** (после ребута или `systemctl restart docker`):
+
+```bash
+cd /path/to/docker-ui-cp-local   # или local-dev-panel
+docker compose ps
+docker compose up -d
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:7580/
+```
+
+Ожидается **`200`**. Если контейнер в статусе `Exited` — снова `docker compose up -d`.
+
+### Автозапуск после перезагрузки Ubuntu
+
+1. **Docker при загрузке системы** (один раз):
+
+   ```bash
+   sudo systemctl enable --now docker
+   ```
+
+2. **Панель** — политика `restart: unless-stopped` в compose (уже в репозитории). После включения Docker контейнер поднимется сам. Если вы когда-то делали `docker compose down`, пересоздайте:
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. Проверка: `docker ps` — должна быть строка `local-dev-panel-control-panel-1` со статусом **Up** и портом `0.0.0.0:7580->8000/tcp`.
 
 ### Первые шаги в интерфейсе
 

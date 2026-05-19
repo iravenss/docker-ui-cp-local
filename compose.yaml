@@ -1,6 +1,7 @@
 services:
   control-panel:
     build: .
+    restart: unless-stopped
     ports:
       - "7580:8000"
     volumes:
